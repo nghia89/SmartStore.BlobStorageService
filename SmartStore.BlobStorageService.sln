@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32319.34
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartStore.BlobStorageService", "SmartStore.BlobStorageService\SmartStore.BlobStorageService.csproj", "{B8A8EB0C-B045-4E47-990A-34B610ECF675}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B8A8EB0C-B045-4E47-990A-34B610ECF675}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8A8EB0C-B045-4E47-990A-34B610ECF675}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8A8EB0C-B045-4E47-990A-34B610ECF675}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8A8EB0C-B045-4E47-990A-34B610ECF675}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {179CD454-C101-4312-A8F4-638A06BE0DE5}
+	EndGlobalSection
+EndGlobal
