@@ -11,14 +11,18 @@ namespace SmartStore.BlobStorageService
 {
     public class BlobStorageService : IBlobStorageService
     {
-
+        private readonly BlobServiceClient _blobClient;
+        public BlobStorageService(BlobServiceClient blobServiceClient)
+        {
+            _blobClient = blobServiceClient;
+        }
         public async Task<bool> DeleteBlobIfExistAsync(string url)
         {
             if (string.IsNullOrEmpty(url)) return true;
             var isImg = CommonContains.AllowedImgExt.Any(y => url.EndsWith(y));
 
             var imageSizes = CommonContains.ImageSize();
-            BlobContainerClient blobContainer = new BlobContainerClient("DefaultEndpointsProtocol=https;AccountName=voviecstorage;AccountKey=6BWk9HK3Due9UE836/Q92xBWzOQjAais9ufHOGozQvwGP1if3/eYbuat77DyCMwzw2ZPZpiVK5ecw9pe5Lx5fA==;EndpointSuffix=core.windows.net", (isImg ? "upload-images" : "upload-files"));
+            BlobContainerClient blobContainer = _blobClient.GetBlobContainerClient(isImg ? "upload-images" : "upload-files");
             var blobClient = blobContainer.GetBlobClient(url);
 
             if (blobContainer != null)
@@ -38,24 +42,44 @@ namespace SmartStore.BlobStorageService
         public async Task<string> UploadBlobAsync(Stream file, string contentType, string fileName, string? container)
         {
 
-            if (string.IsNullOrEmpty(contentType)) return "";
+            if (string.IsNullOrEmpty(contentType))
+            {
+                return "";
+                throw new OverflowException("ContentType rổng.");
+            }
             var isImg = CommonContains.AllowedImgExt.Any(y => contentType.EndsWith(y));
-            if (!isImg && !CommonContains.AllowedFileExt.Any(y => contentType.EndsWith(y))) return "";
+            if (!isImg && !CommonContains.AllowedFileExt.Any(y => contentType.EndsWith(y)))
+            {
+                return "";
+                throw new OverflowException("Không thuộc định dạng cho phép");
+            };
             var _container = container ?? (isImg ? "upload-images" : "upload-files");
-            BlobContainerClient blobContainer = new BlobContainerClient("DefaultEndpointsProtocol=https;AccountName=voviecstorage;AccountKey=6BWk9HK3Due9UE836/Q92xBWzOQjAais9ufHOGozQvwGP1if3/eYbuat77DyCMwzw2ZPZpiVK5ecw9pe5Lx5fA==;EndpointSuffix=core.windows.net", _container);
+            BlobContainerClient blobContainer = _blobClient.GetBlobContainerClient(isImg ? "upload-images" : "upload-files");
 
             var blobClient = blobContainer.GetBlobClient(fileName);
             BlobHttpHeaders httpHeaders = new BlobHttpHeaders()
             {
                 ContentType = contentType
             };
+            using (MemoryStream mem = new MemoryStream())
+            {
+                byte[] buffer = new byte[32768];
+                int read;
+                while ((read = file.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    mem.Write(buffer, 0, read); mem.Position = 0;
+                }
+                _ = await blobClient.UploadAsync(mem, httpHeaders);
+            }
 
-            await blobClient.UploadAsync(file, httpHeaders);
+
             if (container == "upload-images")
                 await ResizingImageUpload(file, fileName, _container);
-            await blobContainer.ExistsAsync();
-            return blobContainer.Uri.AbsoluteUri + "/" + fileName;
+
+            return blobContainer.Uri.AbsoluteUri;
         }
+
+
         public async Task ResizingImageUpload(Stream file, string fileName, string container)
         {
             BlobContainerClient blobContainer = new BlobContainerClient("DefaultEndpointsProtocol=https;AccountName=voviecstorage;AccountKey=6BWk9HK3Due9UE836/Q92xBWzOQjAais9ufHOGozQvwGP1if3/eYbuat77DyCMwzw2ZPZpiVK5ecw9pe5Lx5fA==;EndpointSuffix=core.windows.net", container);
@@ -66,6 +90,7 @@ namespace SmartStore.BlobStorageService
             {
                 var newFileName = Regex.Replace(fileName, @"\.([^.]*)$", $"_{imgSize.Key}.jpeg");
                 var blobClient = blobContainer.GetBlobClient(newFileName);
+                file.Position = 0;
                 using (var outStream = new MemoryStream())
                 {
                     using (var image = Image.Load(file))
